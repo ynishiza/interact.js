@@ -5,6 +5,7 @@ require('./legacyBrowsers');
 
 // pointerEvents
 require('./pointerEvents');
+require('./pointerEvents/holdRepeat');
 require('./pointerEvents/interactableTargets');
 
 // inertia
@@ -18,11 +19,19 @@ require('./modifiers/restrict');
 require('./autoStart/delay');
 
 // actions
+require('./actions/gesture');
+require('./actions/resize');
+require('./actions/drag');
+require('./actions/drop');
+
+// load these modifiers after resize is loaded
+require('./modifiers/restrictEdges');
+require('./modifiers/restrictSize');
+
+// autoStart actions
 require('./autoStart/gesture');
 require('./autoStart/resize');
 require('./autoStart/drag');
-
-require('./actions/drop');
 
 // Interactable preventDefault setting
 require('./interactablePreventDefault.js');
