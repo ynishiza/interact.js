@@ -1,5 +1,5 @@
 /**
- * interact.js 1.2.6
+ * interact.js 1.3.0
  *
  * Copyright (c) 2012-2016 Taye Adeyemi <dev@taye.me>
  * Open source under the MIT License.
@@ -24,7 +24,7 @@ if (typeof window === 'undefined') {
   module.exports = require('./src/index');
 }
 
-},{"./src/index":18,"./src/utils/window":45}],2:[function(require,module,exports){
+},{"./src/index":18,"./src/utils/window":49}],2:[function(require,module,exports){
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _require = require('./utils/arr');
@@ -91,7 +91,7 @@ var Eventable = (function () {
 
 module.exports = Eventable;
 
-},{"./utils/arr":30,"./utils/extend.js":35}],3:[function(require,module,exports){
+},{"./utils/arr":33,"./utils/extend.js":38}],3:[function(require,module,exports){
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var extend = require('./utils/extend');
@@ -257,7 +257,7 @@ InteractEvent.signals = signals;
 
 module.exports = InteractEvent;
 
-},{"./defaultOptions":17,"./utils/Signals":29,"./utils/extend":35,"./utils/getOriginXY":36}],4:[function(require,module,exports){
+},{"./defaultOptions":17,"./utils/Signals":32,"./utils/extend":38,"./utils/getOriginXY":39}],4:[function(require,module,exports){
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var isType = require('./utils/isType');
@@ -863,7 +863,7 @@ Interactable.settingsMethods = ['deltaSource', 'origin', 'preventDefault', 'rect
 
 module.exports = Interactable;
 
-},{"./Eventable":2,"./actions":9,"./defaultOptions":17,"./scope":28,"./utils/Signals":29,"./utils/arr":30,"./utils/browser":31,"./utils/domUtils":33,"./utils/events":34,"./utils/extend":35,"./utils/isType":40}],5:[function(require,module,exports){
+},{"./Eventable":2,"./actions":9,"./defaultOptions":17,"./scope":31,"./utils/Signals":32,"./utils/arr":33,"./utils/browser":34,"./utils/domUtils":36,"./utils/events":37,"./utils/extend":38,"./utils/isType":43}],5:[function(require,module,exports){
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var scope = require('./scope');
@@ -1312,7 +1312,10 @@ function doOnInteractions(method) {
 
 function endAll(event) {
   for (var i = 0; i < scope.interactions.length; i++) {
-    scope.interactions[i].end(event);
+    var interaction = scope.interactions[i];
+
+    interaction.end(event);
+    signals.fire('endall', { event: event, interaction: interaction });
   }
 }
 
@@ -1366,7 +1369,7 @@ scope.endAllInteractions = endAll;
 
 module.exports = Interaction;
 
-},{"./scope":28,"./utils":38,"./utils/Signals":29,"./utils/browser":31,"./utils/events":34,"./utils/interactionFinder":39}],6:[function(require,module,exports){
+},{"./scope":31,"./utils":41,"./utils/Signals":32,"./utils/browser":34,"./utils/events":37,"./utils/interactionFinder":42}],6:[function(require,module,exports){
 var actions = require('./index');
 var utils = require('../utils');
 var InteractEvent = require('../InteractEvent');
@@ -1562,7 +1565,7 @@ defaultOptions.drag = drag.defaults;
 
 module.exports = drag;
 
-},{"../InteractEvent":3,"../Interactable":4,"../Interaction":5,"../defaultOptions":17,"../utils":38,"./index":9}],7:[function(require,module,exports){
+},{"../InteractEvent":3,"../Interactable":4,"../Interaction":5,"../defaultOptions":17,"../utils":41,"./index":9}],7:[function(require,module,exports){
 var actions = require('./index');
 var utils = require('../utils');
 var scope = require('../scope');
@@ -2074,7 +2077,7 @@ defaultOptions.drop = drop.defaults;
 
 module.exports = drop;
 
-},{"../InteractEvent":3,"../Interactable":4,"../Interaction":5,"../defaultOptions":17,"../interact":20,"../scope":28,"../utils":38,"./index":9}],8:[function(require,module,exports){
+},{"../InteractEvent":3,"../Interactable":4,"../Interaction":5,"../defaultOptions":17,"../interact":20,"../scope":31,"../utils":41,"./index":9}],8:[function(require,module,exports){
 var actions = require('./index');
 var utils = require('../utils');
 var InteractEvent = require('../InteractEvent');
@@ -2279,7 +2282,7 @@ defaultOptions.gesture = gesture.defaults;
 
 module.exports = gesture;
 
-},{"../InteractEvent":3,"../Interactable":4,"../Interaction":5,"../defaultOptions":17,"../utils":38,"./index":9}],9:[function(require,module,exports){
+},{"../InteractEvent":3,"../Interactable":4,"../Interaction":5,"../defaultOptions":17,"../utils":41,"./index":9}],9:[function(require,module,exports){
 var actions = {
   names: [],
   methodDict: {}
@@ -2460,7 +2463,7 @@ Interaction.signals.on('action-start', function (_ref) {
     interaction.resizeRects = {
       start: startRect,
       current: utils.extend({}, startRect),
-      restricted: utils.extend({}, startRect),
+      inverted: utils.extend({}, startRect),
       previous: utils.extend({}, startRect),
       delta: {
         left: 0, right: 0, width: 0,
@@ -2468,7 +2471,7 @@ Interaction.signals.on('action-start', function (_ref) {
       }
     };
 
-    resizeEvent.rect = interaction.resizeRects.restricted;
+    resizeEvent.rect = interaction.resizeRects.inverted;
     resizeEvent.deltaRect = interaction.resizeRects.delta;
   }
 
@@ -2497,9 +2500,9 @@ Interaction.signals.on('action-move', function (_ref2) {
   if (edges) {
     var start = interaction.resizeRects.start;
     var current = interaction.resizeRects.current;
-    var restricted = interaction.resizeRects.restricted;
+    var inverted = interaction.resizeRects.inverted;
     var delta = interaction.resizeRects.delta;
-    var previous = utils.extend(interaction.resizeRects.previous, restricted);
+    var previous = utils.extend(interaction.resizeRects.previous, inverted);
     var originalEdges = edges;
 
     var dx = resizeEvent.dx;
@@ -2536,42 +2539,42 @@ Interaction.signals.on('action-move', function (_ref2) {
 
     if (invertible) {
       // if invertible, copy the current rect
-      utils.extend(restricted, current);
+      utils.extend(inverted, current);
 
       if (invert === 'reposition') {
         // swap edge values if necessary to keep width/height positive
         var swap = undefined;
 
-        if (restricted.top > restricted.bottom) {
-          swap = restricted.top;
+        if (inverted.top > inverted.bottom) {
+          swap = inverted.top;
 
-          restricted.top = restricted.bottom;
-          restricted.bottom = swap;
+          inverted.top = inverted.bottom;
+          inverted.bottom = swap;
         }
-        if (restricted.left > restricted.right) {
-          swap = restricted.left;
+        if (inverted.left > inverted.right) {
+          swap = inverted.left;
 
-          restricted.left = restricted.right;
-          restricted.right = swap;
+          inverted.left = inverted.right;
+          inverted.right = swap;
         }
       }
     } else {
       // if not invertible, restrict to minimum of 0x0 rect
-      restricted.top = Math.min(current.top, start.bottom);
-      restricted.bottom = Math.max(current.bottom, start.top);
-      restricted.left = Math.min(current.left, start.right);
-      restricted.right = Math.max(current.right, start.left);
+      inverted.top = Math.min(current.top, start.bottom);
+      inverted.bottom = Math.max(current.bottom, start.top);
+      inverted.left = Math.min(current.left, start.right);
+      inverted.right = Math.max(current.right, start.left);
     }
 
-    restricted.width = restricted.right - restricted.left;
-    restricted.height = restricted.bottom - restricted.top;
+    inverted.width = inverted.right - inverted.left;
+    inverted.height = inverted.bottom - inverted.top;
 
-    for (var edge in restricted) {
-      delta[edge] = restricted[edge] - previous[edge];
+    for (var edge in inverted) {
+      delta[edge] = inverted[edge] - previous[edge];
     }
 
     resizeEvent.edges = interaction.prepared.edges;
-    resizeEvent.rect = restricted;
+    resizeEvent.rect = inverted;
     resizeEvent.deltaRect = delta;
   }
 
@@ -2771,7 +2774,7 @@ defaultOptions.resize = resize.defaults;
 
 module.exports = resize;
 
-},{"../InteractEvent":3,"../Interactable":4,"../Interaction":5,"../defaultOptions":17,"../utils":38,"../utils/browser":31,"./index":9}],11:[function(require,module,exports){
+},{"../InteractEvent":3,"../Interactable":4,"../Interaction":5,"../defaultOptions":17,"../utils":41,"../utils/browser":34,"./index":9}],11:[function(require,module,exports){
 var raf = require('./utils/raf');
 var getWindow = require('./utils/window').getWindow;
 var isWindow = require('./utils/isType').isWindow;
@@ -2897,7 +2900,7 @@ defaultOptions.perAction.autoScroll = autoScroll.defaults;
 
 module.exports = autoScroll;
 
-},{"./Interaction":5,"./defaultOptions":17,"./utils/domUtils":33,"./utils/isType":40,"./utils/raf":44,"./utils/window":45}],12:[function(require,module,exports){
+},{"./Interaction":5,"./defaultOptions":17,"./utils/domUtils":36,"./utils/isType":43,"./utils/raf":47,"./utils/window":49}],12:[function(require,module,exports){
 var autoStart = require('./index');
 var Interaction = require('../Interaction');
 
@@ -3061,7 +3064,7 @@ function checkStartAxis(startAxis, interactable) {
   return startAxis === 'xy' || thisAxis === 'xy' || thisAxis === startAxis;
 }
 
-},{"../actions/drag":6,"../scope":28,"../utils/browser":31,"../utils/domUtils":33,"../utils/isType":40,"./index":15}],14:[function(require,module,exports){
+},{"../actions/drag":6,"../scope":31,"../utils/browser":34,"../utils/domUtils":36,"../utils/isType":43,"./index":15}],14:[function(require,module,exports){
 require('./index').setActionDefaults(require('../actions/gesture'));
 
 },{"../actions/gesture":8,"./index":15}],15:[function(require,module,exports){
@@ -3445,7 +3448,7 @@ utils.extend(defaultOptions.perAction, autoStart.perActionDefaults);
 
 module.exports = autoStart;
 
-},{"../Interactable":4,"../Interaction":5,"../actions":9,"../defaultOptions":17,"../interact":20,"../scope":28,"../utils":38,"../utils/Signals":29,"../utils/browser":31}],16:[function(require,module,exports){
+},{"../Interactable":4,"../Interaction":5,"../actions":9,"../defaultOptions":17,"../interact":20,"../scope":31,"../utils":41,"../utils/Signals":32,"../utils/browser":34}],16:[function(require,module,exports){
 require('./index').setActionDefaults(require('../actions/resize'));
 
 },{"../actions/resize":10,"./index":15}],17:[function(require,module,exports){
@@ -3483,6 +3486,7 @@ require('./legacyBrowsers');
 
 // pointerEvents
 require('./pointerEvents');
+require('./pointerEvents/holdRepeat');
 require('./pointerEvents/interactableTargets');
 
 // inertia
@@ -3496,11 +3500,19 @@ require('./modifiers/restrict');
 require('./autoStart/delay');
 
 // actions
+require('./actions/gesture');
+require('./actions/resize');
+require('./actions/drag');
+require('./actions/drop');
+
+// load these modifiers after resize is loaded
+require('./modifiers/restrictEdges');
+require('./modifiers/restrictSize');
+
+// autoStart actions
 require('./autoStart/gesture');
 require('./autoStart/resize');
 require('./autoStart/drag');
-
-require('./actions/drop');
 
 // Interactable preventDefault setting
 require('./interactablePreventDefault.js');
@@ -3511,7 +3523,7 @@ require('./autoScroll');
 // export interact
 module.exports = require('./interact');
 
-},{"./actions/drop":7,"./autoScroll":11,"./autoStart/delay":12,"./autoStart/drag":13,"./autoStart/gesture":14,"./autoStart/resize":16,"./inertia":19,"./interact":20,"./interactablePreventDefault.js":21,"./legacyBrowsers":22,"./modifiers/restrict":24,"./modifiers/snap":25,"./pointerEvents":26,"./pointerEvents/interactableTargets":27}],19:[function(require,module,exports){
+},{"./actions/drag":6,"./actions/drop":7,"./actions/gesture":8,"./actions/resize":10,"./autoScroll":11,"./autoStart/delay":12,"./autoStart/drag":13,"./autoStart/gesture":14,"./autoStart/resize":16,"./inertia":19,"./interact":20,"./interactablePreventDefault.js":21,"./legacyBrowsers":22,"./modifiers/restrict":24,"./modifiers/restrictEdges":25,"./modifiers/restrictSize":26,"./modifiers/snap":27,"./pointerEvents":29,"./pointerEvents/holdRepeat":28,"./pointerEvents/interactableTargets":30}],19:[function(require,module,exports){
 var InteractEvent = require('./InteractEvent');
 var Interaction = require('./Interaction');
 var modifiers = require('./modifiers');
@@ -3794,7 +3806,7 @@ function updateInertiaCoords(interaction) {
   }]);
 }
 
-},{"./InteractEvent":3,"./Interaction":5,"./modifiers":23,"./utils":38,"./utils/raf":44}],20:[function(require,module,exports){
+},{"./InteractEvent":3,"./Interaction":5,"./modifiers":23,"./utils":41,"./utils/raf":47}],20:[function(require,module,exports){
 var browser = require('./utils/browser');
 var events = require('./utils/events');
 var utils = require('./utils');
@@ -4057,7 +4069,7 @@ scope.interact = interact;
 
 module.exports = interact;
 
-},{"./Interactable":4,"./Interaction":5,"./scope":28,"./utils":38,"./utils/browser":31,"./utils/events":34}],21:[function(require,module,exports){
+},{"./Interactable":4,"./Interaction":5,"./scope":31,"./utils":41,"./utils/browser":34,"./utils/events":37}],21:[function(require,module,exports){
 var Interactable = require('./Interactable');
 var Interaction = require('./Interaction');
 var scope = require('./scope');
@@ -4161,7 +4173,7 @@ Interaction.docEvents.dragstart = function preventNativeDrag(event) {
   }
 };
 
-},{"./Interactable":4,"./Interaction":5,"./scope":28,"./utils/domUtils":33,"./utils/isType":40}],22:[function(require,module,exports){
+},{"./Interactable":4,"./Interaction":5,"./scope":31,"./utils/domUtils":36,"./utils/isType":43}],22:[function(require,module,exports){
 var scope = require('./scope');
 var events = require('./utils/events');
 var browser = require('./utils/browser');
@@ -4246,7 +4258,7 @@ if (browser.isIE8) {
 
 module.exports = null;
 
-},{"./scope":28,"./utils/browser":31,"./utils/events":34,"./utils/interactionFinder":39}],23:[function(require,module,exports){
+},{"./scope":31,"./utils/browser":34,"./utils/events":37,"./utils/interactionFinder":42}],23:[function(require,module,exports){
 var InteractEvent = require('../InteractEvent');
 var Interaction = require('../Interaction');
 var extend = require('../utils/extend');
@@ -4316,8 +4328,9 @@ var modifiers = {
       var modifierName = _ref;
 
       var modifier = modifiers[modifierName];
+      var modifierOptions = target.options[interaction.prepared.name][modifierName];
 
-      if (!modifier.shouldDo(target, interaction.prepared.name, preEnd, requireEndOnly)) {
+      if (!shouldDo(modifierOptions, preEnd, requireEndOnly)) {
         continue;
       }
 
@@ -4400,8 +4413,10 @@ Interaction.signals.on('action-end', function (_ref5) {
   var event = _ref5.event;
 
   for (var i = 0; i < modifiers.names.length; i++) {
+    var modifierOptions = interaction.target.options[interaction.prepared.name][modifiers.names[i]];
+
     // if the endOnly option is true for any modifier
-    if (modifiers[modifiers.names[i]].shouldDo(interaction.target, interaction.prepared.name, true, true)) {
+    if (shouldDo(modifierOptions, true, true)) {
       // fire a move event at the modified coordinates
       interaction.doMove({ event: event, preEnd: true });
       break;
@@ -4427,9 +4442,13 @@ InteractEvent.signals.on('set-xy', function (_ref6) {
   }
 });
 
+function shouldDo(options, preEnd, requireEndOnly) {
+  return options && options.enabled && (preEnd || !options.endOnly) && (!requireEndOnly || options.endOnly);
+}
+
 module.exports = modifiers;
 
-},{"../InteractEvent":3,"../Interaction":5,"../utils/extend":35}],24:[function(require,module,exports){
+},{"../InteractEvent":3,"../Interaction":5,"../utils/extend":38}],24:[function(require,module,exports){
 var modifiers = require('./index');
 var utils = require('../utils');
 var defaultOptions = require('../defaultOptions');
@@ -4440,12 +4459,6 @@ var restrict = {
     endOnly: false,
     restriction: null,
     elementRect: null
-  },
-
-  shouldDo: function (interactable, actionName, preEnd, requireEndOnly) {
-    var restrictOptions = interactable.options[actionName].restrict;
-
-    return restrictOptions && restrictOptions.enabled && (preEnd || !restrictOptions.endOnly) && (!requireEndOnly || restrictOptions.endOnly);
   },
 
   setOffset: function (interaction, interactable, element, rect, startOffset) {
@@ -4503,34 +4516,34 @@ var restrict = {
     }
 
     var rect = restriction;
-    var restrictedX = undefined;
-    var restrictedY = undefined;
+    var modifiedX = undefined;
+    var modifiedY = undefined;
 
     var offset = interaction.modifierOffsets.restrict;
 
     if (!restriction) {
-      restrictedX = page.x;
-      restrictedY = page.y;
+      modifiedX = page.x;
+      modifiedY = page.y;
     }
     // object is assumed to have
     // x, y, width, height or
     // left, top, right, bottom
     else if ('x' in restriction && 'y' in restriction) {
-        restrictedX = Math.max(Math.min(rect.x + rect.width - offset.right, page.x), rect.x + offset.left);
-        restrictedY = Math.max(Math.min(rect.y + rect.height - offset.bottom, page.y), rect.y + offset.top);
+        modifiedX = Math.max(Math.min(rect.x + rect.width - offset.right, page.x), rect.x + offset.left);
+        modifiedY = Math.max(Math.min(rect.y + rect.height - offset.bottom, page.y), rect.y + offset.top);
       } else {
-        restrictedX = Math.max(Math.min(rect.right - offset.right, page.x), rect.left + offset.left);
-        restrictedY = Math.max(Math.min(rect.bottom - offset.bottom, page.y), rect.top + offset.top);
+        modifiedX = Math.max(Math.min(rect.right - offset.right, page.x), rect.left + offset.left);
+        modifiedY = Math.max(Math.min(rect.bottom - offset.bottom, page.y), rect.top + offset.top);
       }
 
-    status.dx = restrictedX - page.x;
-    status.dy = restrictedY - page.y;
+    status.dx = modifiedX - page.x;
+    status.dy = modifiedY - page.y;
 
-    status.changed = status.restrictedX !== restrictedX || status.restrictedY !== restrictedY;
+    status.changed = status.modifiedX !== modifiedX || status.modifiedY !== modifiedY;
     status.locked = !!(status.dx || status.dy);
 
-    status.restrictedX = restrictedX;
-    status.restrictedY = restrictedY;
+    status.modifiedX = modifiedX;
+    status.modifiedY = modifiedY;
 
     return status;
   },
@@ -4572,7 +4585,252 @@ defaultOptions.perAction.restrict = restrict.defaults;
 
 module.exports = restrict;
 
-},{"../defaultOptions":17,"../utils":38,"./index":23}],25:[function(require,module,exports){
+},{"../defaultOptions":17,"../utils":41,"./index":23}],25:[function(require,module,exports){
+// This module adds the options.resize.restrictEdges setting which sets min and
+// max for the top, left, bottom and right edges of the target being resized.
+//
+// interact(target).resize({
+//   edges: { top: true, left: true },
+//   restrictEdges: {
+//     min: { top:   0, left:   0, right: 100, bottom: 100 },
+//     max: { top: 500, left: 500, right: 600, bottom: 600 },
+//   },
+// });
+
+var modifiers = require('./index');
+var utils = require('../utils');
+var rectUtils = require('../utils/rect');
+var defaultOptions = require('../defaultOptions');
+var resize = require('../actions/resize');
+
+var noMin = { top: -Infinity, left: -Infinity, bottom: -Infinity, right: -Infinity };
+var noMax = { top: +Infinity, left: +Infinity, bottom: +Infinity, right: +Infinity };
+
+var restrictEdges = {
+  defaults: {
+    enabled: false,
+    endOnly: false,
+    min: null,
+    max: null,
+    offset: null
+  },
+
+  setOffset: function (interaction, interactable, element, rect, startOffset) {
+    var options = interactable.options[interaction.prepared.name].restrictEdges;
+
+    if (!options) {
+      return;
+    }
+
+    var offset = getRestrictionRect(offset, interaction);
+
+    if (offset) {
+      return {
+        top: startOffset.top + offset.y,
+        left: startOffset.left + offset.x,
+        bottom: startOffset.bottom + offset.y,
+        right: startOffset.right + offset.x
+      };
+    }
+
+    return startOffset;
+  },
+
+  set: function (pageCoords, interaction, status) {
+    if (!interaction.interacting()) {
+      return status;
+    }
+
+    var target = interaction.target;
+    var options = status.options || target && target.options[interaction.prepared.name].restrictEdges;
+    var edges = interaction.prepared.linkedEdges || interaction.prepared.edges;
+
+    if (!options.enabled || !edges) {
+      return status;
+    }
+
+    var page = status.useStatusXY ? { x: status.x, y: status.y } : utils.extend({}, pageCoords);
+    var min = rectUtils.xywhToTlbr(getRestrictionRect(options.min, interaction)) || noMin;
+    var max = rectUtils.xywhToTlbr(getRestrictionRect(options.max, interaction)) || noMax;
+    var offset = interaction.modifierOffsets.restrictEdges;
+
+    var modifiedX = page.x;
+    var modifiedY = page.y;
+
+    status.dx = 0;
+    status.dy = 0;
+    status.locked = false;
+
+    if (edges.top) {
+      modifiedY = Math.max(Math.min(max.top + offset.top, page.y), min.top + offset.top);
+    } else if (edges.bottom) {
+      modifiedY = Math.max(Math.min(max.bottom - offset.bottom, page.y), min.bottom - offset.bottom);
+    }
+    if (edges.left) {
+      modifiedX = Math.max(Math.min(max.left + offset.left, page.x), min.left + offset.left);
+    } else if (edges.right) {
+      modifiedX = Math.max(Math.min(max.right - offset.right, page.x), min.right - offset.right);
+    }
+
+    status.dx = modifiedX - page.x;
+    status.dy = modifiedY - page.y;
+
+    status.changed = status.modifiedX !== modifiedX || status.modifiedY !== modifiedY;
+    status.locked = !!(status.dx || status.dy);
+
+    status.modifiedX = modifiedX;
+    status.modifiedY = modifiedY;
+
+    //console.log(status.dx, status.modifiedX, status.changed, status.locked);
+
+    return status;
+  },
+
+  reset: function (status) {
+    status.dx = status.dy = 0;
+    status.modifiedX = status.modifiedY = NaN;
+    status.locked = false;
+    status.changed = true;
+    status.options = null;
+
+    return status;
+  },
+
+  modifyCoords: function (page, client, interactable, status, actionName, phase) {
+    var options = status.options || interactable.options[actionName].restrictEdges;
+
+    if (options && options.enabled && !(phase === 'start' && status.locked)) {
+
+      if (status.locked) {
+        page.x += status.dx;
+        page.y += status.dy;
+        client.x += status.dx;
+        client.y += status.dy;
+
+        return {
+          dx: status.dx,
+          dy: status.dy
+        };
+      }
+    }
+  },
+
+  noMin: noMin,
+  noMax: noMax,
+  getRestrictionRect: getRestrictionRect
+};
+
+function getRestrictionRect(value, interaction) {
+  value = utils.getStringOptionResult(value, interaction.element) || value;
+
+  if (utils.isFunction(value)) {
+    value = value(interaction.resizeRects.inverted);
+  }
+
+  if (utils.isElement(value)) {
+    value = utils.getElementRect(value);
+  }
+
+  return value;
+}
+
+modifiers.restrictEdges = restrictEdges;
+modifiers.names.push('restrictEdges');
+
+defaultOptions.perAction.restrictEdges = restrictEdges.defaults;
+resize.defaults.restrictEdges = restrictEdges.defaults;
+
+module.exports = restrictEdges;
+
+},{"../actions/resize":10,"../defaultOptions":17,"../utils":41,"../utils/rect":48,"./index":23}],26:[function(require,module,exports){
+// This module adds the options.resize.restrictSize setting which sets min and
+// max width and height for the target being resized.
+//
+// interact(target).resize({
+//   edges: { top: true, left: true },
+//   restrictSize: {
+//     min: { width: -600, height: -600 },
+//     max: { width:  600, height:  600 },
+//   },
+// });
+
+var modifiers = require('./index');
+var restrictEdges = require('./restrictEdges');
+var utils = require('../utils');
+var rectUtils = require('../utils/rect');
+var defaultOptions = require('../defaultOptions');
+var resize = require('../actions/resize');
+
+var noMin = { width: -Infinity, height: -Infinity };
+var noMax = { width: +Infinity, height: +Infinity };
+
+var restrictSize = {
+  defaults: {
+    enabled: false,
+    endOnly: false,
+    min: null,
+    max: null
+  },
+
+  setOffset: function () {},
+
+  set: function (pageCoords, interaction, status) {
+    if (!interaction.interacting()) {
+      return status;
+    }
+
+    var target = interaction.target;
+    var options = target && target.options[interaction.prepared.name].restrictSize;
+    var edges = interaction.prepared.linkedEdges || interaction.prepared.edges;
+
+    if (!options.enabled || !edges) {
+      return status;
+    }
+
+    var rect = rectUtils.xywhToTlbr(interaction.resizeRects.inverted);
+
+    var minSize = rectUtils.tlbrToXywh(restrictEdges.getRestrictionRect(options.min, interaction)) || noMin;
+    var maxSize = rectUtils.tlbrToXywh(restrictEdges.getRestrictionRect(options.max, interaction)) || noMax;
+
+    status.options = {
+      enabled: options.enabled,
+      endOnly: options.endOnly,
+      min: utils.extend({}, restrictEdges.noMin),
+      max: utils.extend({}, restrictEdges.noMax)
+    };
+
+    if (edges.top) {
+      status.options.min.top = rect.bottom - maxSize.height;
+      status.options.max.top = rect.bottom - minSize.height;
+    } else if (edges.bottom) {
+      status.options.min.bottom = rect.top + minSize.height;
+      status.options.max.bottom = rect.top + maxSize.height;
+    }
+    if (edges.left) {
+      status.options.min.left = rect.right - maxSize.width;
+      status.options.max.left = rect.right - minSize.width;
+    } else if (edges.right) {
+      status.options.min.right = rect.left + minSize.width;
+      status.options.max.right = rect.left + maxSize.width;
+    }
+
+    return restrictEdges.set(pageCoords, interaction, status);
+  },
+
+  reset: restrictEdges.reset,
+
+  modifyCoords: restrictEdges.modifyCoords
+};
+
+modifiers.restrictSize = restrictSize;
+modifiers.names.push('restrictSize');
+
+defaultOptions.perAction.restrictSize = restrictSize.defaults;
+resize.defaults.restrictSize = restrictSize.defaults;
+
+module.exports = restrictSize;
+
+},{"../actions/resize":10,"../defaultOptions":17,"../utils":41,"../utils/rect":48,"./index":23,"./restrictEdges":25}],27:[function(require,module,exports){
 var modifiers = require('./index');
 var interact = require('../interact');
 var utils = require('../utils');
@@ -4587,12 +4845,6 @@ var snap = {
     offsets: null,
 
     relativePoints: null
-  },
-
-  shouldDo: function (interactable, actionName, preEnd, requireEndOnly) {
-    var snapOptions = interactable.options[actionName].snap;
-
-    return snapOptions && snapOptions.enabled && (preEnd || !snapOptions.endOnly) && (!requireEndOnly || snapOptions.endOnly);
   },
 
   setOffset: function (interaction, interactable, element, rect, startOffset) {
@@ -4861,7 +5113,62 @@ defaultOptions.perAction.snap = snap.defaults;
 
 module.exports = snap;
 
-},{"../defaultOptions":17,"../interact":20,"../utils":38,"./index":23}],26:[function(require,module,exports){
+},{"../defaultOptions":17,"../interact":20,"../utils":41,"./index":23}],28:[function(require,module,exports){
+var pointerEvents = require('./index.js');
+var Interaction = require('../Interaction');
+
+pointerEvents.signals.on('new', function (_ref) {
+  var pointerEvent = _ref.pointerEvent;
+
+  pointerEvent.count = (pointerEvent.count || 0) + 1;
+});
+
+pointerEvents.signals.on('fired', function (_ref2) {
+  var interaction = _ref2.interaction;
+  var pointerEvent = _ref2.pointerEvent;
+  var eventTarget = _ref2.eventTarget;
+  var targets = _ref2.targets;
+
+  if (pointerEvent.type !== 'hold') {
+    return;
+  }
+
+  // get the repeat interval from the first eventable
+  var interval = targets[0].eventable.options.holdRepeatInterval;
+
+  // don't repeat if the interval is 0 or less
+  if (interval <= 0) {
+    return;
+  }
+
+  // set a timeout to fire the holdrepeat event
+  interaction.holdIntervalHandle = setTimeout(function () {
+    pointerEvents.collectEventTargets(interaction, pointerEvent, pointerEvent, eventTarget, 'hold');
+  }, interval);
+});
+
+function endHoldRepeat(_ref3) {
+  var interaction = _ref3.interaction;
+
+  // set the interaction's holdStopTime property
+  // to stop further holdRepeat events
+  if (interaction.holdIntervalHandle) {
+    clearInterval(interaction.holdIntervalHandle);
+    interaction.holdIntervalHandle = null;
+  }
+}
+
+var _arr = ['move', 'up', 'cancel', 'endall'];
+for (var _i = 0; _i < _arr.length; _i++) {
+  var signal = _arr[_i];
+  Interaction.signals.on(signal, endHoldRepeat);
+}
+
+// don't repeat by default
+pointerEvents.defaults.holdRepeatInterval = 0;
+pointerEvents.types.push('holdrepeat');
+
+},{"../Interaction":5,"./index.js":29}],29:[function(require,module,exports){
 var scope = require('../scope');
 var Interaction = require('../Interaction');
 var utils = require('../utils');
@@ -4930,9 +5237,11 @@ function firePointers(interaction, pointer, event, eventTarget, targets, eventTy
   }
 
   var signalArg = {
+    interaction: interaction,
     pointerEvent: pointerEvent,
     pointer: pointer,
     event: event,
+    eventTarget: eventTarget,
     targets: targets
   };
 
@@ -4956,6 +5265,8 @@ function firePointers(interaction, pointer, event, eventTarget, targets, eventTy
     pointerEvent.pageY -= originY;
     pointerEvent.clientX -= originX;
     pointerEvent.clientY -= originY;
+
+    pointerEvent.eventable = target.eventable;
 
     target.eventable.fire(pointerEvent);
 
@@ -5125,7 +5436,7 @@ Interaction.signals.on('down', function (_ref4) {
   timer.duration = minDuration;
   timer.timeout = setTimeout(function () {
 
-    collectEventTargets(interaction, browser.isIE8 ? eventCopy : pointer, eventCopy, eventTarget, 'hold', minDuration);
+    collectEventTargets(interaction, browser.isIE8 ? eventCopy : pointer, eventCopy, eventTarget, 'hold');
   }, minDuration);
 });
 
@@ -5171,7 +5482,7 @@ module.exports = scope.pointerEvents = {
   types: ['down', 'move', 'up', 'cancel', 'tap', 'doubletap', 'hold']
 };
 
-},{"../Interaction":5,"../defaultOptions":17,"../scope":28,"../utils":38,"../utils/Signals":29,"../utils/arr":30,"../utils/browser":31}],27:[function(require,module,exports){
+},{"../Interaction":5,"../defaultOptions":17,"../scope":31,"../utils":41,"../utils/Signals":32,"../utils/arr":33,"../utils/browser":34}],30:[function(require,module,exports){
 var pointerEvents = require('./index');
 var Interactable = require('../Interactable');
 var browser = require('../utils/browser');
@@ -5262,7 +5573,7 @@ Interactable.prototype._backCompatOption = function (optionName, newValue) {
 
 Interactable.settingsMethods.push('pointerEvents');
 
-},{"../Interactable":4,"../scope":28,"../utils/arr":30,"../utils/browser":31,"../utils/domUtils":33,"../utils/extend":35,"../utils/isType":40,"./index":26}],28:[function(require,module,exports){
+},{"../Interactable":4,"../scope":31,"../utils/arr":33,"../utils/browser":34,"../utils/domUtils":36,"../utils/extend":38,"../utils/isType":43,"./index":29}],31:[function(require,module,exports){
 var utils = require('./utils');
 var extend = require('./utils/extend');
 var events = require('./utils/events');
@@ -5318,7 +5629,7 @@ extend(scope, require('./utils/domObjects'));
 
 module.exports = scope;
 
-},{"./utils":38,"./utils/Signals":29,"./utils/domObjects":32,"./utils/events":34,"./utils/extend":35,"./utils/window":45}],29:[function(require,module,exports){
+},{"./utils":41,"./utils/Signals":32,"./utils/domObjects":35,"./utils/events":37,"./utils/extend":38,"./utils/window":49}],32:[function(require,module,exports){
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _require = require('./arr');
@@ -5378,7 +5689,7 @@ Signals['new'] = function () {
 
 module.exports = Signals;
 
-},{"./arr":30}],30:[function(require,module,exports){
+},{"./arr":33}],33:[function(require,module,exports){
 function indexOf(array, target) {
   for (var i = 0, len = array.length; i < len; i++) {
     if (array[i] === target) {
@@ -5420,7 +5731,7 @@ module.exports = {
   filter: filter
 };
 
-},{}],31:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 var win = require('./window');
 var isType = require('./isType');
 var domObjects = require('./domObjects');
@@ -5460,7 +5771,7 @@ browser.useMatchesSelectorPolyfill = !isType.isFunction(Element.prototype[browse
 
 module.exports = browser;
 
-},{"./domObjects":32,"./isType":40,"./window":45}],32:[function(require,module,exports){
+},{"./domObjects":35,"./isType":43,"./window":49}],35:[function(require,module,exports){
 var domObjects = {};
 var win = require('./window').window;
 
@@ -5479,7 +5790,7 @@ domObjects.PointerEvent = win.PointerEvent || win.MSPointerEvent;
 
 module.exports = domObjects;
 
-},{"./window":45}],33:[function(require,module,exports){
+},{"./window":49}],36:[function(require,module,exports){
 var win = require('./window');
 var browser = require('./browser');
 var isType = require('./isType');
@@ -5716,7 +6027,7 @@ var domUtils = {
 
 module.exports = domUtils;
 
-},{"./browser":31,"./domObjects":32,"./isType":40,"./window":45}],34:[function(require,module,exports){
+},{"./browser":34,"./domObjects":35,"./isType":43,"./window":49}],37:[function(require,module,exports){
 var arr = require('./arr');
 var isType = require('./isType');
 var domUtils = require('./domUtils');
@@ -6057,7 +6368,7 @@ module.exports = {
   _attachedListeners: attachedListeners
 };
 
-},{"./arr":30,"./domUtils":33,"./isType":40,"./pointerExtend":42,"./window":45}],35:[function(require,module,exports){
+},{"./arr":33,"./domUtils":36,"./isType":43,"./pointerExtend":45,"./window":49}],38:[function(require,module,exports){
 module.exports = function extend(dest, source) {
   for (var prop in source) {
     dest[prop] = source[prop];
@@ -6065,7 +6376,7 @@ module.exports = function extend(dest, source) {
   return dest;
 };
 
-},{}],36:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 var _require = require('./domUtils');
 
 var closest = _require.closest;
@@ -6103,12 +6414,12 @@ module.exports = function (target, element, action) {
   return origin;
 };
 
-},{"./domUtils":33,"./isType":40}],37:[function(require,module,exports){
+},{"./domUtils":36,"./isType":43}],40:[function(require,module,exports){
 module.exports = function (x, y) {
   return Math.sqrt(x * x + y * y);
 };
 
-},{}],38:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 var extend = require('./extend');
 var win = require('./window');
 
@@ -6153,6 +6464,22 @@ var utils = {
     return dest;
   },
 
+  getStringOptionResult: function (value, interactable, element) {
+    if (!utils.isString(value)) {
+      return null;
+    }
+
+    if (value === 'parent') {
+      value = utils.parentNode(element);
+    } else if (value === 'self') {
+      value = interactable.getRect(element);
+    } else {
+      value = utils.closest(element, value);
+    }
+
+    return value;
+  },
+
   extend: extend,
   hypot: require('./hypot'),
   getOriginXY: require('./getOriginXY')
@@ -6165,7 +6492,7 @@ extend(utils, require('./pointerUtils'));
 
 module.exports = utils;
 
-},{"./arr":30,"./domUtils":33,"./extend":35,"./getOriginXY":36,"./hypot":37,"./isType":40,"./pointerUtils":43,"./window":45}],39:[function(require,module,exports){
+},{"./arr":33,"./domUtils":36,"./extend":38,"./getOriginXY":39,"./hypot":40,"./isType":43,"./pointerUtils":46,"./window":49}],42:[function(require,module,exports){
 var scope = require('../scope');
 var utils = require('./index');
 var browser = require('./browser');
@@ -6383,7 +6710,7 @@ var finder = {
 
 module.exports = finder;
 
-},{"../scope":28,"./browser":31,"./index":38}],40:[function(require,module,exports){
+},{"../scope":31,"./browser":34,"./index":41}],43:[function(require,module,exports){
 var win = require('./window');
 var isWindow = require('./isWindow');
 var domObjects = require('./domObjects');
@@ -6448,12 +6775,12 @@ isType.isArray = function (thing) {
 
 module.exports = isType;
 
-},{"./domObjects":32,"./isWindow":41,"./window":45}],41:[function(require,module,exports){
+},{"./domObjects":35,"./isWindow":44,"./window":49}],44:[function(require,module,exports){
 module.exports = function (thing) {
   return !!(thing && thing.Window) && thing instanceof thing.Window;
 };
 
-},{}],42:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 function pointerExtend(dest, source) {
   for (var prop in source) {
     var prefixedPropREs = module.exports.prefixedPropREs;
@@ -6480,7 +6807,7 @@ pointerExtend.prefixedPropREs = {
 
 module.exports = pointerExtend;
 
-},{}],43:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 var hypot = require('./hypot');
 var browser = require('./browser');
 var dom = require('./domObjects');
@@ -6693,7 +7020,7 @@ var pointerUtils = {
 
 module.exports = pointerUtils;
 
-},{"./browser":31,"./domObjects":32,"./hypot":37,"./isType":40,"./pointerExtend":42}],44:[function(require,module,exports){
+},{"./browser":34,"./domObjects":35,"./hypot":40,"./isType":43,"./pointerExtend":45}],47:[function(require,module,exports){
 var vendors = ['ms', 'moz', 'webkit', 'o'];
 var lastTime = 0;
 var request = undefined;
@@ -6728,7 +7055,38 @@ module.exports = {
   cancel: cancel
 };
 
-},{}],45:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
+var extend = require('./extend');
+
+module.exports = {
+  xywhToTlbr: function (rect) {
+    if (rect && !('left' in rect && 'top' in rect)) {
+      rect = extend({}, rect);
+
+      rect.left = rect.x || 0;
+      rect.top = rect.y || 0;
+      rect.right = rect.right || rect.left + rect.width;
+      rect.bottom = rect.bottom || rect.top + rect.height;
+    }
+
+    return rect;
+  },
+
+  tlbrToXywh: function (rect) {
+    if (rect && !('x' in rect && 'y' in rect)) {
+      rect = extend({}, rect);
+
+      rect.x = rect.left || 0;
+      rect.top = rect.top || 0;
+      rect.width = rect.width || rect.right - rect.x;
+      rect.height = rect.height || rect.bottom - rect.y;
+    }
+
+    return rect;
+  }
+};
+
+},{"./extend":38}],49:[function(require,module,exports){
 var win = module.exports;
 var isWindow = require('./isWindow');
 
@@ -6769,6 +7127,6 @@ win.getWindow = function getWindow(node) {
 
 win.init = init;
 
-},{"./isWindow":41}]},{},[1])(1)
+},{"./isWindow":44}]},{},[1])(1)
 });
 //# sourceMappingURL=interact.js.map
