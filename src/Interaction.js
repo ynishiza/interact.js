@@ -409,9 +409,10 @@ function doOnInteractions (method) {
         let interaction = finder.search(event, event.type, eventTarget);
 
         if (!interaction) {
+          const pointerEventRegex = new RegExp(scope.PointerEvent ? 'pointer' : 'mouse', 'i');
 
           interaction = new Interaction();
-          interaction.mouse = (/mouse/i.test(event.pointerType || event.type)
+          interaction.mouse = (/mouse/i.test(event.pointerType) || pointerEventRegex.test(event.type)
                                // MSPointerEvent.MSPOINTER_TYPE_MOUSE
                                || event.pointerType === 4);
         }
